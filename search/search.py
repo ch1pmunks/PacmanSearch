@@ -78,26 +78,80 @@ def depthFirstSearch(problem):
 
     To get started, you might want to try some of these simple commands to
     understand the search problem that is being passed in:
-
-    print "Start:", problem.getStartState()
-    print "Is the start a goal?", problem.isGoalState(problem.getStartState())
-    print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+	
+    frontier = util.Stack()
+    return searchAlgorithm(problem, frontier)
+
+def searchAlgorithm(problem, frontier):
+    node = problem.getStartState()
+    if problem.isGoalState(node):
+        return []
+
+    paths = {}
+    frontier.push((node, None, None))
+
+    while True:
+        if frontier.isEmpty():
+            #error
+            return []
+        node, prevNode, action = frontier.pop()
+        if node not in paths: # not explored
+	    if prevNode == None:
+		paths[node] = []
+	    else:
+		newPath = list(paths[prevNode])
+		newPath.append(action)
+                paths[node] = newPath
+
+            if problem.isGoalState(node):
+                return paths[node]
+            successors = problem.getSuccessors(node)
+            for successor, action, stepCost in successors:
+                frontier.push((successor, node, action))
 
 def breadthFirstSearch(problem):
     """
     Search the shallowest nodes in the search tree first.
     [2nd Edition: p 73, 3rd Edition: p 82]
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    frontier = util.Queue()
+    return searchAlgorithm(problem, frontier)
+
 
 def uniformCostSearch(problem):
     "Search the node of least total cost first. "
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    node = problem.getStartState()
+    if problem.isGoalState(node):
+        return []
+
+    frontier = util.PriorityQueue()
+    paths = {}
+    totalCost = {}
+    frontier.push((node, None, None, 0), 0)
+
+    while True:
+        if frontier.isEmpty():
+            #error
+            return []
+        node, prevNode, action, stepCost = frontier.pop()
+        if node not in paths: # not explored
+            if prevNode == None:
+                paths[node] = []
+		totalCost[node] = 0
+            else:
+                newPath = list(paths[prevNode])
+                newPath.append(action)
+                paths[node] = newPath
+		totalCost[node] = totalCost[prevNode] + stepCost
+
+            if problem.isGoalState(node):
+                return paths[node]
+            successors = problem.getSuccessors(node)
+            for successor, action, stepCost in successors:
+                frontier.push((successor, node, action, stepCost), totalCost[node] + stepCost)
 
 def nullHeuristic(state, problem=None):
     """
@@ -108,9 +162,36 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     "Search the node that has the lowest combined cost and heuristic first."
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
 
+    node = problem.getStartState()
+    if problem.isGoalState(node):
+        return []
+
+    frontier = util.PriorityQueue()
+    paths = {}
+    totalCost = {}
+    frontier.push((node, None, None, 0), 0)
+
+    while True:
+        if frontier.isEmpty():
+            #error
+            return []
+        node, prevNode, action, stepCost = frontier.pop()
+        if node not in paths: # not explored
+            if prevNode == None:
+                paths[node] = []
+                totalCost[node] = 0
+            else:
+                newPath = list(paths[prevNode])
+                newPath.append(action)
+                paths[node] = newPath
+                totalCost[node] = totalCost[prevNode] + stepCost
+
+            if problem.isGoalState(node):
+                return paths[node]
+            successors = problem.getSuccessors(node)
+            for successor, action, stepCost in successors:
+                frontier.push((successor, node, action, stepCost), totalCost[node] + stepCost + heuristic(successor, problem))
 
 # Abbreviations
 bfs = breadthFirstSearch
