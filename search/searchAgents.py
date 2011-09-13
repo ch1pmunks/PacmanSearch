@@ -493,15 +493,44 @@ def foodHeuristic(state, problem):
 		    distanceMap[(space1,space2,iter+1)] = min(distanceMap[space1,addedNode,iter] + distanceMap[addedNode,space2,iter], distanceMap[space1,space2,iter])
 	problem.heuristicInfo['distanceMap'] = distanceMap
 	problem.heuristicInfo['numSpaces'] = len(freeSpaces)
-	
+
     distanceMap = problem.heuristicInfo['distanceMap']
     numSpaces = problem.heuristicInfo['numSpaces']
     closestFoodDist = sys.maxint
     foodList = foodGrid.asList()
+
+    if len(foodList) <= 7:
+	return optimalPath(position, foodList, distanceMap, numSpaces)
+
     for i in range(len(foodList)):
 	nextDist = distanceMap[(position,foodList[i],numSpaces)]
 	closestFoodDist = min(closestFoodDist, nextDist)
-    return closestFoodDist + len(foodList) - 1
+    heuristic1 = closestFoodDist + len(foodList) - 1
+
+    left = x
+    right = x
+    top = y
+    bottom = y
+    for foodPos in foodList:
+	left = min(left, foodPos[0])
+	right = max(right, foodPos[0])
+	top = max(top, foodPos[1])
+	bottom = min(bottom, foodPos[1])
+    heuristic2 = top - bottom + right - left
+
+    return max(heuristic1, heuristic2)
+
+def optimalPath(position, foodList, distances, numSpaces):
+    if len(foodList) == 0:
+	return 0
+    minDist = sys.maxint
+    for foodPos in foodList:
+	distance = distances[(position, foodPos, numSpaces)]
+	remainingFood = foodList[:]
+	remainingFood.remove(foodPos)
+	remainder = optimalPath(foodPos, remainingFood, distances, numSpaces)
+	minDist = min(distance + remainder, minDist)
+    return minDist
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
