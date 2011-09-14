@@ -469,6 +469,7 @@ def foodHeuristic(state, problem):
     if foodGrid.count() == 0:
 	return 0
 
+    # calculate shortest path between any pair of positions
     if 'distanceMap' not in problem.heuristicInfo:
 	distanceMap = {}
 	walls = problem.walls
@@ -496,41 +497,27 @@ def foodHeuristic(state, problem):
 
     distanceMap = problem.heuristicInfo['distanceMap']
     numSpaces = problem.heuristicInfo['numSpaces']
-    closestFoodDist = sys.maxint
     foodList = foodGrid.asList()
 
-    if len(foodList) <= 7:
-	return optimalPath(position, foodList, distanceMap, numSpaces)
-
-    for i in range(len(foodList)):
-	nextDist = distanceMap[(position,foodList[i],numSpaces)]
-	closestFoodDist = min(closestFoodDist, nextDist)
-    heuristic1 = closestFoodDist + len(foodList) - 1
-
-    left = x
-    right = x
-    top = y
-    bottom = y
+    closestFoodDist = sys.maxint
+    furthestFoodDist = 0
     for foodPos in foodList:
-	left = min(left, foodPos[0])
-	right = max(right, foodPos[0])
-	top = max(top, foodPos[1])
-	bottom = min(bottom, foodPos[1])
-    heuristic2 = top - bottom + right - left
-
-    return max(heuristic1, heuristic2)
-
-def optimalPath(position, foodList, distances, numSpaces):
-    if len(foodList) == 0:
-	return 0
-    minDist = sys.maxint
-    for foodPos in foodList:
-	distance = distances[(position, foodPos, numSpaces)]
-	remainingFood = foodList[:]
-	remainingFood.remove(foodPos)
-	remainder = optimalPath(foodPos, remainingFood, distances, numSpaces)
-	minDist = min(distance + remainder, minDist)
-    return minDist
+	distToFood = distanceMap[(position,foodPos,numSpaces)]
+	closestFoodDist = min(closestFoodDist, distToFood)
+	furthestFoodDist = max(furthestFoodDist, distToFood)
+    """
+	heuristic 1 = distance to closest food + number of foods - 1
+	consistent because distance to closest food can decrease at most by 1 between
+	states, number of foods can decrease at most by 1 between states, and they never BOTH
+	decrease at the same time unless you're next to the last food, in which case
+	h1 = 1 + 1 - 1 = 1, and decreases to 0 when the last food is eaten by the base case above
+    """
+    h1 = closestFoodDist + len(foodList) - 1
+    """
+	heuristic 2 = optimal path to furthest food
+    """
+    h2 = furthestFoodDist
+    return max(h1, h2)
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
